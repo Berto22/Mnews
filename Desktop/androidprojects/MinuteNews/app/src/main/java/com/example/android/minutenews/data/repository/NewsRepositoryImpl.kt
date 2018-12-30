@@ -1,7 +1,7 @@
 package com.example.android.minutenews.data.repository
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.Observer
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import com.example.android.minutenews.data.DataSource
 import com.example.android.minutenews.data.repository.NewsRepository
 import com.example.android.minutenews.data.response.NewsResponse
@@ -20,8 +20,9 @@ class NewsRepositoryImpl(
 ) : NewsRepository {
 
     init {
+        //newsDao.deleteTopHeadlines()
         newsDataSource.loadNews.observeForever { it ->
-            insertNews(it!!)
+            insertNews(it)
         }
     }
     override suspend fun getLatestNews(): LiveData<out List<Article>> {
@@ -33,6 +34,7 @@ class NewsRepositoryImpl(
 
     private fun insertNews(fetchedNews : NewsResponse) {
         GlobalScope.launch(Dispatchers.IO) {
+            //newsDao.deleteTopHeadlines()
             newsDao.insertTopHeadlines(fetchedNews.articles)
         }
 
@@ -41,18 +43,21 @@ class NewsRepositoryImpl(
     private suspend fun initRefresh() {
         if (isRefresh(ZonedDateTime.now().minusMinutes(10))) {
             fetchRefreshNews()
+            //10
 
         }
 
     }
 
     private suspend fun fetchRefreshNews() {
+        newsDao.deleteTopHeadlines()
         newsDataSource.fetchNews("bbc-news")
     }
 
     private fun isRefresh(lastRefreshTime: ZonedDateTime) : Boolean {
         val fiveMinuteAgo = ZonedDateTime.now().minusMinutes(5)
         return lastRefreshTime.isBefore(fiveMinuteAgo)
+        //5
 
     }
     /*private fun isRefresh(lastRefreshTime : LocalDateTime) : Boolean {
